@@ -498,10 +498,12 @@ void CN105Climate::controlMode() {
 
 void CN105Climate::setActionIfOperatingTo(climate::ClimateAction action_if_operating) {
 
-    // Determine if stage indicates activity (for fallback logic)
-    bool stage_is_active = this->use_stage_for_operating_status_ &&
-        this->currentSettings.stage != nullptr &&
+    // This is the true status of the indoor unit
+    bool stage_is_active = this->currentSettings.stage != nullptr &&
         strcmp(this->currentSettings.stage, STAGE_MAP[0 /*IDLE*/]) != 0;
+    
+    bool sub_mode_is_active = this->currentSettings.sub_mode != nullptr &&
+        strcmp(this->currentSettings.sub_mode, SUB_MODE_MAP[0 /*NORMAL*/]) == 0;
 
     ESP_LOGD(LOG_OPERATING_STATUS_TAG, "Setting action (operating: %s, stage_fallback_enabled: %s, stage: %s, stage_is_active: %s)",
         this->currentStatus.operating ? "true" : "false",
@@ -509,16 +511,43 @@ void CN105Climate::setActionIfOperatingTo(climate::ClimateAction action_if_opera
         getIfNotNull(this->currentSettings.stage, "N/A"),
         stage_is_active ? "yes" : "no");
 
-    // True fallback logic: operating OR (fallback enabled AND stage is active)
+    const char * sub_mode = this->currentSettings.sub_mode != nullptr ? this->currentSettings.sub_mode : "nullptr";
+    const char * stage = this->currentSettings.stage != nullptr ? this->currentSettings.stage : "nullptr";
+    const char * auto_sub_mode = this->currentSettings.auto_sub_mode != nullptr ? this->currentSettings.auto_sub_mode : "nullptr";
+
+    ESP_LOGI(LOG_OPERATING_STATUS_TAG, "Setting Action (sub_mode: %s, stage: %s, auto_sub_mode: %s)",
+        sub_mode,
+        stage,
+        auto_sub_mode);
+    
+    bool supports_two_stage_heating = false;
+    // This logic handles multiple indoor units. currentStatus.operating is the status of the outdoor unit.
+    // currentStatus.stage is the status of the indoor unit. The indoor unit is only active if 'stage' is not 'IDLE'.
     // This handles cases like 2-stage heating where compressor may be off but gas heating is active
-    if (this->currentStatus.operating) {
-        // Primary: compressor is running
+    // Is the outdoor unit required for cooling but potentially not for 2-stage heating?
+    if (climate::CLIMATE_ACTION_HEATING == action_if_operating) {
+        if (supports_two_stage_heating && stage_is_active) { 
+            // 2-stage Heating
+            // TODO: Is there more 
+            this->action = action_if_operating;
+            ESP_LOGI(LOG_OPERATING_STATUS_TAG, "CLIMATE_ACTION_HEATING 2-Stage (stage: %s) (operating: %s)", stage, this->currentStatus.operating ? "true" : "false");
+        } else if (!supports_two_stage_heating && this->currentStatus.operating && stage_is_active && sub_mode_is_active) {
+            // Single Stage Heating
+            this->action = action_if_operating;
+            ESP_LOGI(LOG_OPERATING_STATUS_TAG, "CLIMATE_ACTION_HEATING 1-Stage (stage: %s) (operating: %s)", stage, this->currentStatus.operating ? "true" : "false");
+        } else {
+            // Indicates the unit is of but isn't actively heating (fan could be running but ESPHome docs states this is IDLE)
+            this->action = climate::CLIMATE_ACTION_IDLE;
+            ESP_LOGI(LOG_OPERATING_STATUS_TAG, "Action set to IDLE (not activity heating)");
+        }
+    } else if (stage_is_active && this->currentStatus.operating && climate::CLIMATE_ACTION_COOLING == action_if_operating) {
+        //Cooling - This should require the compress / outside unit running and indoor unit running
         this->action = action_if_operating;
-        ESP_LOGD(LOG_OPERATING_STATUS_TAG, "Action set by operating status (compressor running)");
-    } else if (stage_is_active) {
-        // Fallback: compressor not running but stage indicates activity (e.g., gas heating)
-        this->action = action_if_operating;
-        ESP_LOGD(LOG_OPERATING_STATUS_TAG, "Action set by stage fallback (stage: %s)", this->currentSettings.stage);
+        ESP_LOGD(LOG_OPERATING_STATUS_TAG, "CLIMATE_ACTION_COOLING (stage: %s)", this->currentSettings.stage);
+    } else if (stage_is_active && climate::CLIMATE_ACTION_FAN == action_if_operating) {
+        // Fan Running
+    } else if (stage_is_active && this->currentStatus.operating && climate::CLIMATE_ACTION_DRYING == action_if_operating) {
+        // Drying / dehumidifying
     } else {
         // Neither operating nor stage indicates activity
         this->action = climate::CLIMATE_ACTION_IDLE;
