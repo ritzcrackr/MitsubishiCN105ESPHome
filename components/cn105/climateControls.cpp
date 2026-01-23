@@ -643,7 +643,7 @@ climate::ClimateTraits& CN105Climate::config_traits() {
 
 
 void CN105Climate::setModeSetting(const char* setting) {
-    int index = lookupByteMapIndex(MODE_MAP, 5, setting);
+    int index = lookupByteMapIndex(MODE_MAP, setting);
     if (index > -1) {
         wantedSettings.mode = MODE_MAP[index];
     } else {
@@ -652,7 +652,7 @@ void CN105Climate::setModeSetting(const char* setting) {
 }
 
 void CN105Climate::setPowerSetting(const char* setting) {
-    int index = lookupByteMapIndex(POWER_MAP, 2, setting);
+    int index = lookupByteMapIndex(POWER_MAP, setting);
     if (index > -1) {
         wantedSettings.power = POWER_MAP[index];
     } else {
@@ -661,7 +661,7 @@ void CN105Climate::setPowerSetting(const char* setting) {
 }
 
 void CN105Climate::setFanSpeed(const char* setting) {
-    int index = lookupByteMapIndex(FAN_MAP, 6, setting);
+    int index = lookupByteMapIndex(FAN_MAP, setting);
     if (index > -1) {
         wantedSettings.fan = FAN_MAP[index];
     } else {
@@ -670,7 +670,7 @@ void CN105Climate::setFanSpeed(const char* setting) {
 }
 
 void CN105Climate::setVaneSetting(const char* setting) {
-    int index = lookupByteMapIndex(VANE_MAP, 7, setting);
+    int index = lookupByteMapIndex(VANE_MAP, setting);
     if (index > -1) {
         wantedSettings.vane = VANE_MAP[index];
     } else {
@@ -679,7 +679,7 @@ void CN105Climate::setVaneSetting(const char* setting) {
 }
 
 void CN105Climate::setWideVaneSetting(const char* setting) {
-    int index = lookupByteMapIndex(WIDEVANE_MAP, 8, setting);
+    int index = lookupByteMapIndex(WIDEVANE_MAP, setting);
     if (index > -1) {
         wantedSettings.wideVane = WIDEVANE_MAP[index];
     } else {
@@ -688,7 +688,7 @@ void CN105Climate::setWideVaneSetting(const char* setting) {
 }
 
 void CN105Climate::setAirflowControlSetting(const char* setting) {
-    int index = lookupByteMapIndex(AIRFLOW_CONTROL_MAP, 3, setting);
+    int index = lookupByteMapIndex(AIRFLOW_CONTROL_MAP, setting);
     if (index > -1) {
         wantedRunStates.airflow_control = AIRFLOW_CONTROL_MAP[index];
     } else {

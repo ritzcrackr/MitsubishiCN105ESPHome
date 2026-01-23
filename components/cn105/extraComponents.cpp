@@ -80,7 +80,7 @@ void CN105Climate::set_airflow_control_select(
         });
 
     this->airflow_control_select_->setCallbackFunction([this](const char* setting) {
-        if (strcmp(this->currentSettings.wideVane, lookupByteMapValue(WIDEVANE_MAP, WIDEVANE, 8, 0x80 & 0x0F)) == 0) {
+        if (strcmp(this->currentSettings.wideVane, lookupByteMapValue(WIDEVANE_MAP, WIDEVANE, 0x80 & 0x0F)) == 0) {
             ESP_LOGD("EVT", "airFlow -> Request for change of airflow control setting: %s", setting);
 
             this->setAirflowControlSetting(setting);

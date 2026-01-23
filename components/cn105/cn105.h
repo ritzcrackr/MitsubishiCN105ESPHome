@@ -311,10 +311,10 @@ namespace esphome {
     private:
         void force_low_level_uart_reinit();
         int uart_port_ = -1;
-        const char* lookupByteMapValue(const char* valuesMap[], const uint8_t byteMap[], int len, uint8_t byteValue, const char* debugInfo = "", const char* defaultValue = nullptr);
-        int lookupByteMapValue(const int valuesMap[], const uint8_t byteMap[], int len, uint8_t byteValue, const char* debugInfo = "");
-        int lookupByteMapIndex(const char* valuesMap[], int len, const char* lookupValue, const char* debugInfo = "");
-        int lookupByteMapIndex(const int valuesMap[], int len, int lookupValue, const char* debugInfo = "");
+        const char* lookupByteMapValue(std::span<const char*> valuesMap, std::span<const uint8_t> byteMap, uint8_t byteValue, const char* debugInfo = "", const char* defaultValue = nullptr);
+        int lookupByteMapValue(std::span<const int> valuesMap, std::span<const uint8_t> byteMap, uint8_t byteValue, const char* debugInfo = "");
+        int lookupByteMapIndex(std::span<const char*> valuesMap, const char* lookupValue, const char* debugInfo = "");
+        int lookupByteMapIndex(std::span<const int> valuesMap, int lookupValue, const char* debugInfo = "");
 
         void writePacket(uint8_t* packet, int length, bool checkIsActive = true);
         void prepareInfoPacket(uint8_t* packet, int length);

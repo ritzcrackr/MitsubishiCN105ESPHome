@@ -159,7 +159,7 @@ const char* CN105Climate::getVaneSetting() {
 
 const char* CN105Climate::getWideVaneSetting() {
     if (this->wantedSettings.wideVane) {
-        if (strcmp(this->wantedSettings.wideVane, lookupByteMapValue(WIDEVANE_MAP, WIDEVANE, 8, 0x80 & 0x0F)) == 0 && !this->currentSettings.iSee) {
+        if (strcmp(this->wantedSettings.wideVane, lookupByteMapValue(WIDEVANE_MAP, WIDEVANE, 0x80 & 0x0F)) == 0 && !this->currentSettings.iSee) {
             this->wantedSettings.wideVane = this->currentSettings.wideVane;
         }
         return this->wantedSettings.wideVane;
@@ -221,20 +221,20 @@ void CN105Climate::createPacket(uint8_t* packet) {
 
     if (this->wantedSettings.power != nullptr) {
         ESP_LOGD(TAG, "power -> %s", getPowerSetting());
-        int idx = lookupByteMapIndex(POWER_MAP, 2, getPowerSetting(), "power (write)");
+        int idx = lookupByteMapIndex(POWER_MAP, getPowerSetting(), "power (write)");
         if (idx >= 0) { packet[8] = POWER[idx]; packet[6] += CONTROL_PACKET_1[0]; } else { ESP_LOGW(TAG, "Ignoring invalid power setting while building packet"); }
     }
 
     if (this->wantedSettings.mode != nullptr) {
         ESP_LOGD(TAG, "heatpump mode -> %s", getModeSetting());
-        int idx = lookupByteMapIndex(MODE_MAP, 5, getModeSetting(), "mode (write)");
+        int idx = lookupByteMapIndex(MODE_MAP, getModeSetting(), "mode (write)");
         if (idx >= 0) { packet[9] = MODE[idx]; packet[6] += CONTROL_PACKET_1[1]; } else { ESP_LOGW(TAG, "Ignoring invalid mode setting while building packet"); }
     }
 
     if (wantedSettings.temperature != -1) {
         if (!tempMode) {
             ESP_LOGD(TAG, "temperature (tempmode is false) -> %f", getTemperatureSetting());
-            int idx = lookupByteMapIndex(TEMP_MAP, 16, getTemperatureSetting(), "temperature (write)");
+            int idx = lookupByteMapIndex(TEMP_MAP, getTemperatureSetting(), "temperature (write)");
             if (idx >= 0) { packet[10] = TEMP[idx]; packet[6] += CONTROL_PACKET_1[2]; } else { ESP_LOGW(TAG, "Ignoring invalid temperature setting while building packet"); }
         } else {
             ESP_LOGD(TAG, "temperature (tempmode is true) -> %f", getTemperatureSetting());
@@ -246,19 +246,19 @@ void CN105Climate::createPacket(uint8_t* packet) {
 
     if (this->wantedSettings.fan != nullptr) {
         ESP_LOGD(TAG, "heatpump fan -> %s", getFanSpeedSetting());
-        int idx = lookupByteMapIndex(FAN_MAP, 6, getFanSpeedSetting(), "fan (write)");
+        int idx = lookupByteMapIndex(FAN_MAP, getFanSpeedSetting(), "fan (write)");
         if (idx >= 0) { packet[11] = FAN[idx]; packet[6] += CONTROL_PACKET_1[3]; } else { ESP_LOGW(TAG, "Ignoring invalid fan setting while building packet"); }
     }
 
     if (this->wantedSettings.vane != nullptr) {
         ESP_LOGD(TAG, "heatpump vane -> %s", getVaneSetting());
-        int idx = lookupByteMapIndex(VANE_MAP, 7, getVaneSetting(), "vane (write)");
+        int idx = lookupByteMapIndex(VANE_MAP, getVaneSetting(), "vane (write)");
         if (idx >= 0) { packet[12] = VANE[idx]; packet[6] += CONTROL_PACKET_1[4]; } else { ESP_LOGW(TAG, "Ignoring invalid vane setting while building packet"); }
     }
 
     if (this->wantedSettings.wideVane != nullptr) {
         ESP_LOGD(TAG, "heatpump widevane -> %s", getWideVaneSetting());
-        int idx = lookupByteMapIndex(WIDEVANE_MAP, 8, getWideVaneSetting(), "wideVane (write)");
+        int idx = lookupByteMapIndex(WIDEVANE_MAP, getWideVaneSetting(), "wideVane (write)");
         if (idx >= 0) { packet[18] = WIDEVANE[idx] | (this->wideVaneAdj ? 0x80 : 0x00); packet[7] += CONTROL_PACKET_2[0]; } else { ESP_LOGW(TAG, "Ignoring invalid wideVane setting while building packet"); }
     }
 
@@ -492,7 +492,7 @@ void CN105Climate::sendWantedRunStates() {
     packet[5] = 0x08;
     if (this->wantedRunStates.airflow_control != nullptr) {
         ESP_LOGD(TAG, "airflow control -> %s", getAirflowControlSetting());
-        packet[11] = AIRFLOW_CONTROL[lookupByteMapIndex(AIRFLOW_CONTROL_MAP, 3, getAirflowControlSetting(), "run state (write)")];
+        packet[11] = AIRFLOW_CONTROL[lookupByteMapIndex(AIRFLOW_CONTROL_MAP, getAirflowControlSetting(), "run state (write)")];
         packet[6] += RUN_STATE_PACKET_1[4];
     }
     if (this->wantedRunStates.air_purifier > -1) {

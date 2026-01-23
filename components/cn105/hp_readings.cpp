@@ -176,9 +176,9 @@ void CN105Climate::getPowerFromResponsePacket() {
     ESP_LOGD("Decoder", "[0x09 is sub modes]");
 
     heatpumpSettings receivedSettings{};
-    receivedSettings.stage = lookupByteMapValue(STAGE_MAP, STAGE, 7, data[4], "current stage for delivery");
-    receivedSettings.sub_mode = lookupByteMapValue(SUB_MODE_MAP, SUB_MODE, 4, data[3], "submode");
-    receivedSettings.auto_sub_mode = lookupByteMapValue(AUTO_SUB_MODE_MAP, AUTO_SUB_MODE, 4, data[5], "auto mode sub mode");
+    receivedSettings.stage = lookupByteMapValue(STAGE_MAP, STAGE, data[4], "current stage for delivery");
+    receivedSettings.sub_mode = lookupByteMapValue(SUB_MODE_MAP, SUB_MODE, data[3], "submode");
+    receivedSettings.auto_sub_mode = lookupByteMapValue(AUTO_SUB_MODE_MAP, AUTO_SUB_MODE, data[5], "auto mode sub mode");
 
     ESP_LOGD("Decoder", "[Stage : %s]", receivedSettings.stage);
     ESP_LOGD("Decoder", "[Sub Mode  : %s]", receivedSettings.sub_mode);
@@ -214,9 +214,9 @@ void CN105Climate::getSettingsFromResponsePacket() {
     ESP_LOGD("Decoder", "[0x02 is settings]");
 
     receivedSettings.connected = true;
-    receivedSettings.power = lookupByteMapValue(POWER_MAP, POWER, 2, data[3], "power reading");
+    receivedSettings.power = lookupByteMapValue(POWER_MAP, POWER, data[3], "power reading");
     receivedSettings.iSee = data[4] > 0x08 ? true : false;
-    receivedSettings.mode = lookupByteMapValue(MODE_MAP, MODE, 5, receivedSettings.iSee ? (data[4] - 0x08) : data[4], "mode reading");
+    receivedSettings.mode = lookupByteMapValue(MODE_MAP, MODE, receivedSettings.iSee ? (data[4] - 0x08) : data[4], "mode reading");
 
     ESP_LOGD("Decoder", "[Power : %s]", receivedSettings.power);
     ESP_LOGD("Decoder", "[iSee  : %d]", receivedSettings.iSee);
@@ -228,20 +228,20 @@ void CN105Climate::getSettingsFromResponsePacket() {
         receivedSettings.temperature = (float)temp / 2;
         this->tempMode = true;
     } else {
-        receivedSettings.temperature = lookupByteMapValue(TEMP_MAP, TEMP, 16, data[5], "temperature reading");
+        receivedSettings.temperature = lookupByteMapValue(TEMP_MAP, TEMP, data[5], "temperature reading");
     }
 
     ESP_LOGD("Decoder", "[Temp °C: %f]", receivedSettings.temperature);
 
-    receivedSettings.fan = lookupByteMapValue(FAN_MAP, FAN, 6, data[6], "fan reading");
+    receivedSettings.fan = lookupByteMapValue(FAN_MAP, FAN, data[6], "fan reading");
     ESP_LOGD("Decoder", "[Fan: %s]", receivedSettings.fan);
 
-    receivedSettings.vane = lookupByteMapValue(VANE_MAP, VANE, 7, data[7], "vane reading");
+    receivedSettings.vane = lookupByteMapValue(VANE_MAP, VANE, data[7], "vane reading");
     ESP_LOGD("Decoder", "[Vane: %s]", receivedSettings.vane);
 
     // --- START OF MODIFIED SECTION - Reverted widevane section back to more or less original state
     if ((data[10] != 0) && (this->traits_.supports_swing_mode(climate::CLIMATE_SWING_HORIZONTAL))) {    // wideVane is not always supported
-        receivedSettings.wideVane = lookupByteMapValue(WIDEVANE_MAP, WIDEVANE, 8, data[10] & 0x0F, "wideVane reading");
+        receivedSettings.wideVane = lookupByteMapValue(WIDEVANE_MAP, WIDEVANE, data[10] & 0x0F, "wideVane reading");
         this->wideVaneAdj = (data[10] & 0xF0) == 0x80 ? true : false;
         ESP_LOGD("Decoder", "[wideVane: %s (adj:%d)]", receivedSettings.wideVane, this->wideVaneAdj);
     } else {
@@ -257,7 +257,7 @@ void CN105Climate::getSettingsFromResponsePacket() {
     if (this->airflow_control_select_ != nullptr) {
         if (data[10] == 0x80) {
             if (receivedSettings.iSee) {
-                receivedRunStates.airflow_control = lookupByteMapValue(AIRFLOW_CONTROL_MAP, AIRFLOW_CONTROL, 3, data[14], "airflow control reading");
+                receivedRunStates.airflow_control = lookupByteMapValue(AIRFLOW_CONTROL_MAP, AIRFLOW_CONTROL, data[14], "airflow control reading");
             } else {
                 // For some reason data[10] is 0x80, but the i-See sensor is not active. 
                 // Some units let us do this, but the real mode is unknown (might be powersave) and the i-See sensor does not get activated.
@@ -305,7 +305,7 @@ void CN105Climate::getRoomTemperatureFromResponsePacket() {
         receivedStatus.roomTemperature = temp / 2.0f;
         ESP_LOGD(LOG_TEMP_SENSOR_TAG, "data[6]  --> [Room °C: %f]", receivedStatus.roomTemperature);
     } else {
-        receivedStatus.roomTemperature = lookupByteMapValue(ROOM_TEMP_MAP, ROOM_TEMP, 32, data[3]);
+        receivedStatus.roomTemperature = lookupByteMapValue(ROOM_TEMP_MAP, ROOM_TEMP, data[3]);
         ESP_LOGD(LOG_TEMP_SENSOR_TAG, "data[3] map --> [Room °C : %f]", receivedStatus.roomTemperature);
     }
 

@@ -45,7 +45,7 @@ const char* CN105Climate::getIfNotNull(const char* what, const char* defaultValu
  */
 float CN105Climate::calculateTemperatureSetting(float setting) {
     if (!this->tempMode) {
-        return this->lookupByteMapIndex(TEMP_MAP, 16, (int)(setting + 0.5)) > -1 ? setting : TEMP_MAP[0];
+        return this->lookupByteMapIndex(TEMP_MAP, (int)(setting + 0.5)) > -1 ? setting : TEMP_MAP[0];
     } else {
         setting = std::round(2.0f * setting) / 2.0f;  // Round to the nearest half-degree.
         return setting < 10 ? 10 : (setting > 31 ? 31 : setting);
@@ -379,8 +379,8 @@ void CN105Climate::hpFunctionsDebug(uint8_t* packet, unsigned int length) {
     ESP_LOGD(LOG_FUNCTIONS_TAG, "Decoded %02X:%s", packet[0], output.c_str());
 }
 
-int CN105Climate::lookupByteMapIndex(const int valuesMap[], int len, int lookupValue, const char* debugInfo) {
-    for (int i = 0; i < len; i++) {
+int CN105Climate::lookupByteMapIndex(std::span<const int> valuesMap, int lookupValue, const char* debugInfo) {
+    for (int i = 0; i < valuesMap.size(); i++) {
         if (valuesMap[i] == lookupValue) {
             return i;
         }
@@ -389,8 +389,8 @@ int CN105Climate::lookupByteMapIndex(const int valuesMap[], int len, int lookupV
     //esphome::delay(200);
     return -1;
 }
-int CN105Climate::lookupByteMapIndex(const char* valuesMap[], int len, const char* lookupValue, const char* debugInfo) {
-    for (int i = 0; i < len; i++) {
+int CN105Climate::lookupByteMapIndex(std::span<const char*> valuesMap, const char* lookupValue, const char* debugInfo) {
+    for (int i = 0; i < valuesMap.size(); i++) {
         if (strcasecmp(valuesMap[i], lookupValue) == 0) {
             return i;
         }
@@ -399,8 +399,8 @@ int CN105Climate::lookupByteMapIndex(const char* valuesMap[], int len, const cha
     //esphome::delay(200);
     return -1;
 }
-const char* CN105Climate::lookupByteMapValue(const char* valuesMap[], const uint8_t byteMap[], int len, uint8_t byteValue, const char* debugInfo, const char* defaultValue) {
-    for (int i = 0; i < len; i++) {
+const char* CN105Climate::lookupByteMapValue(std::span<const char*> valuesMap, std::span<const uint8_t> byteMap, uint8_t byteValue, const char* debugInfo, const char* defaultValue) {
+    for (int i = 0; i < byteMap.size(); i++) {
         if (byteMap[i] == byteValue) {
             return valuesMap[i];
         }
@@ -414,8 +414,8 @@ const char* CN105Climate::lookupByteMapValue(const char* valuesMap[], const uint
     }
 
 }
-int CN105Climate::lookupByteMapValue(const int valuesMap[], const uint8_t byteMap[], int len, uint8_t byteValue, const char* debugInfo) {
-    for (int i = 0; i < len; i++) {
+int CN105Climate::lookupByteMapValue(std::span<const int> valuesMap, std::span<const uint8_t> byteMap, uint8_t byteValue, const char* debugInfo) {
+    for (int i = 0; i < byteMap.size(); i++) {
         if (byteMap[i] == byteValue) {
             return valuesMap[i];
         }
